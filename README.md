@@ -705,3 +705,95 @@ public class CubeCollector : MonoBehaviour
 
 
 ## Exercise 7
+
+
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
+using TMPro;
+
+[RequireComponent(typeof(Rigidbody))]
+public class CubeCollector : MonoBehaviour
+{
+    public float speed = 5f;
+    private Rigidbody rb;
+
+    private int score = 0; // puntuación total
+
+    [Header("UI")]
+    public TextMeshProUGUI scoreText;   // Text para puntuación
+    public TextMeshProUGUI rewardText;  // Text para mostrar la recompensa
+
+    private int lastRewardScore = 0; // para que no se repita la misma recompensa
+
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+        UpdateScoreUI();
+        rb.freezeRotation = true;
+    }
+
+    private void FixedUpdate()
+    {
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
+
+        Vector3 move = new Vector3(h, 0f, v) * speed;
+        Vector3 vel = new Vector3(move.x, rb.velocity.y, move.z);
+        rb.velocity = vel;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("shieldType"))
+        {
+            score += 5;
+            Destroy(other.gameObject);
+            Debug.Log($"Recolectaste {other.name} (Type1) → Puntuación: {score}");
+            UpdateScoreUI();
+            CheckReward();
+        }
+        else if (other.CompareTag("shieldType1"))
+        {
+            score += 10;
+            Destroy(other.gameObject);
+            Debug.Log($"Recolectaste {other.name} (Type2) → Puntuación: {score}");
+            UpdateScoreUI();
+            CheckReward();
+        }
+    }
+
+    private void UpdateScoreUI()
+    {
+        if (scoreText != null)
+            scoreText.text = "Puntuación: " + score;
+    }
+
+    private void CheckReward()
+    {
+        // Cada 100 puntos y solo una vez por múltiplo
+        if (score / 100 > lastRewardScore / 100)
+        {
+            lastRewardScore = score;
+            ShowReward("¡Has obtenido una recompensa!");
+        }
+    }
+
+    private void ShowReward(string message)
+    {
+        if (rewardText != null)
+        {
+            rewardText.text = message;
+            // Ocultar después de 2 segundos
+            StartCoroutine(HideRewardAfterDelay(2f));
+        }
+    }
+
+    private IEnumerator HideRewardAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (rewardText != null)
+            rewardText.text = "";
+    }
+}
+
