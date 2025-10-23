@@ -206,7 +206,7 @@ public class CubeController : MonoBehaviour
 
 Ejemplo visual (placeholder):
 
-![Ejercicio1](PR4_GIF1.gif.gif)
+![Ejercicio1](./PR4_GIF1.gif.gif)
 
 ---
 
@@ -402,7 +402,7 @@ public class SphereRespuesta : MonoBehaviour
 
 Ejemplo visual (placeholder):
 
-![Ejercicio2](PR4_GIF2.gif.gif)
+![Ejercicio2](./PR4_GIF2.gif.gif)
 ---
 
 ## Ejercicio 3 (notificador global y escudos)
@@ -494,7 +494,7 @@ public class CylinderNotificador : MonoBehaviour
 
 Ejemplo visual (placeholder):
 
-![Ejercicio3](PR4_GIF3.gif.gif)
+![Ejercicio3](./PR4_GIF3.gif.gif)
 
 ---
 
@@ -665,7 +665,7 @@ public class AreaNotificador : MonoBehaviour
 
 Ejemplo visual (placeholder):
 
-![Ejercicio4](PR4_GIF4.gif.gif)
+![Ejercicio4](./PR4_GIF4.gif.gif)
 
 ---
 
@@ -730,7 +730,7 @@ public class CubeCollector : MonoBehaviour
 
 Ejemplo visual (placeholder):
 
-![Ejercicio5](PR4_GIF5.gif.gif)
+![Ejercicio5](./PR4_GIF5.gif.gif)
 
 ---
 
@@ -807,7 +807,7 @@ public class CubeCollector : MonoBehaviour
 
 Ejemplo visual (placeholder):
 
-![Ejercicio6](PR4_GIF6.gif.gif)
+![Ejercicio6](./PR4_GIF6.gif.gif)
 
 ---
 
@@ -917,5 +917,5 @@ public class CubeCollector : MonoBehaviour
 
 Ejemplo visual (placeholder):
 
-![Ejercicio7](PR4_GIF7.gif.gif)
+![Ejercicio7](./PR4_GIF7.gif.gif)
 ---
