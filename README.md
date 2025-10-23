@@ -158,10 +158,7 @@ public class CylinderNotificador : MonoBehaviour
 	// Control sencillo para hacer la prueba: si el cubo colisiona con el cilindro, disparar evento.
 	private void OnCollisionEnter(Collision collision)
 	{
-		// Log the collision details for debugging
 		Debug.Log($"{name}: OnCollisionEnter with '{collision.collider.name}' (tag='{collision.collider.tag}')");
-
-		// Support cube tagged either 'Cube' or 'PlayerCube' (some projects use different tags)
 		if (collision.collider.CompareTag("Cube"))
 		{
 			Debug.Log($"{name}: Collision with cube detected - invoking OnMiEvento (if any subscribers).\nCollider: {collision.collider.name}, Tag: {collision.collider.tag}");
@@ -171,7 +168,7 @@ public class CylinderNotificador : MonoBehaviour
 		}
 	}
 
-	// (Opcional) método público para disparar el evento desde otros scripts
+	// (totalmente opcional) método público para disparar el evento desde otros scripts
 	public void DispararEvento() 
 	{
 		Debug.Log($"{name}: DispararEvento() called - invoking OnMiEvento (if any subscribers)");
@@ -261,7 +258,7 @@ public class SphereRespuesta : MonoBehaviour
 
 	// Nota: ya no usamos CylinderNotificador. Usamos HumanoidNotifier global.
 	private Rigidbody rb;
-	private Rigidbody moveTargetRb; // objetivo actual al que moverse (shield o humanoide)
+	private Rigidbody moveTargetRb; 
 
 	private void Awake()
 	{
@@ -335,25 +332,21 @@ public class SphereRespuesta : MonoBehaviour
 	// Cuando colisione con un escudo físico, cambiar color
 	private void OnCollisionEnter(Collision collision)
 	{
-		// If touched by the cube: notify the global notifier
 		if (collision.collider.CompareTag("Cube") || collision.collider.CompareTag("PlayerCube"))
 		{
 			HumanoidNotifier.NotifyHumanoidTouched(gameObject.tag, rb);
 			Debug.Log($"{name}: Fui tocado por el cubo. Notifiqué al HumanoidNotifier. My tag={gameObject.tag}");
 			return;
 		}
-
-		// Otherwise, if collided with assigned shields, change color on the appropriate child renderer
 		if (collision.collider.attachedRigidbody != null)
 		{
 			Rigidbody otherRb = collision.collider.attachedRigidbody;
 			if (otherRb == shieldType1 || otherRb == shieldType2)
 			{
-				// Find renderer: prefer child whose name contains 'mesh' (case-insensitive), else first renderer found
+				//problema con los prefabs tuve que cambiar el render de la malla
 				Renderer rend = FindPreferredChildRenderer();
 				if (rend != null)
 				{
-					// Instantiate material so we don't modify sharedMaterial across instances
 					rend.material = new Material(rend.material);
 					rend.material.color = Color.red; // cambia a rojo cuando colisiona con un escudo
 					Debug.Log($"{name}: Colisioné con un escudo ({otherRb.name}) y cambié de color en renderer '{rend.gameObject.name}'.");
@@ -454,7 +447,6 @@ public class CylinderNotificador : MonoBehaviour
 	// Evento público — pasa el Rigidbody del cilindro a los observadores
 	public event Action<Rigidbody> OnMiEvento;
 
-	// Ensure we have a non-trigger collider so OnCollisionEnter fires
 	private void Awake()
 	{
 		Collider col = GetComponent<Collider>();
@@ -586,7 +578,7 @@ public class HumanoideRespuestaRB : MonoBehaviour
 		{
 			rb.position = escudoObjetivo1.position;
 			rb.velocity = Vector3.zero; // asegurar que no siga moviéndose
-			triggered = false; // ya no necesitamos FixedUpdate
+			triggered = false;
 			Debug.Log($"{name}: Soy Type1. Me teletransporté a escudoObjetivo1 at {escudoObjetivo1.position}");
 		}
 		else if (CompareTag("Type2"))
@@ -608,7 +600,7 @@ public class HumanoideRespuestaRB : MonoBehaviour
 		if (CompareTag("Type1"))
 		{
 			Vector3 dir = moveTargetPos - rb.position;
-			dir.y = 0; // mantener altura
+			dir.y = 0; 
 			if (dir.magnitude < 0.1f)
 			{
 				rb.velocity = Vector3.zero;
