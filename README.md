@@ -912,3 +912,41 @@ Ejemplo visual (placeholder):
 
 ![Ejercicio7](./PR4_GIF7.gif)
 ---
+
+
+APUNTES 
+
+Acercar a una posicion un rigid body:
+```csharp
+            Vector3 dir = (moveTarget.position - rb.position).normalized;
+            rb.MovePosition(rb.position + dir * speed * Time.fixedDeltaTime);
+```
+Alejar a una posicion un rigid body:
+```csharp
+            Vector3 dir = (rb.position - moveTarget.position).normalized;
+            rb.MovePosition(rb.position + dir * speed * Time.fixedDeltaTime);
+```
+Aumentar tamaño a un rigid body:
+Muy importante fijar un maximo y hacerlo de manera controlada con el multiplicador bajo
+```csharp
+            rb.transform.localScale *= 1.02f;
+```
+Buscar los hijos de un tipo de un rigid body:
+```csharp
+           Renderer[] rend = rb.gameObject.GetComponentsInChildren<Renderer>(true);
+```
+Cambiar de color un objeto:
+```csharp
+          rend.material.color = Color.red;
+```
+Conseguir la tag del objeto:
+```csharp
+          gameObject.tag;
+```
+Rotar un rigid body:
+```csharp
+          Conseguir la tag del objeto:
+```csharp
+          gameObject.tag; rb.rotation = Quaternion.LookRotation(moveDirection);
+```
+```
