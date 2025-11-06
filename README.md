@@ -35,31 +35,24 @@ Código (clases usadas)
 ```csharp
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
 public class SphereRespuesta : MonoBehaviour
 {
-	[Header("Movimiento (m/s)")]
 	public float speed = 5f;
 
-	[Header("Si eres Type1: asigna aquí la Rigidbody de la Type2 objetivo (en el inspector)")]
-	public Rigidbody targetType2Rb; // asignar solo para Type1 (si no se asigna avisará)
+	public Rigidbody targetType2Rb;
 
-	// Referencia al notificador (puedes arrastrarla en el inspector, o dejarla null y buscar en Start)
+	// Referencia al notificador
 	public CylinderNotificador notificador;
 
 	private Rigidbody rb;
-	private Rigidbody moveTargetRb; // objetivo actual al que moverse (cylinderRb o targetType2Rb)
+	private Rigidbody moveTargetRb;
 
 	private void Awake()
 	{
 		rb = GetComponent<Rigidbody>();
-
-		// Buscar un collider existente
 		Collider col = GetComponent<Collider>();
 		if (col == null)
 			col = GetComponentInChildren<Collider>(true);
-
-		// Si no hay collider, añadir uno automáticamente
 		if (col == null)
 		{
 			SphereCollider sc = gameObject.AddComponent<SphereCollider>();
@@ -72,15 +65,12 @@ public class SphereRespuesta : MonoBehaviour
 
 	private void Start()
 	{
-		// Si no asignaste el notificador en el inspector, buscar el primero en la escena
 		if (notificador == null)
 		{
 			notificador = FindObjectOfType<CylinderNotificador>();
 			if (notificador == null)
 				Debug.LogWarning($"{name}: No se encontró CylinderNotificador en la escena. Asigna uno en el inspector.");
 		}
-
-		// Suscribirse al evento (si existe)
 		if (notificador != null)
 		{
 			notificador.OnMiEvento += MiRespuesta;
@@ -90,12 +80,9 @@ public class SphereRespuesta : MonoBehaviour
 
 	private void OnDestroy()
 	{
-		// Desuscribirse para evitar memory leaks / null refs
 		if (notificador != null)
 			notificador.OnMiEvento -= MiRespuesta;
 	}
-
-	// Callback que sigue la firma del evento: recibe el Rigidbody del cilindro que disparó el evento
 	private void MiRespuesta(Rigidbody cylinderRb)
 	{
 		Debug.Log($"{name}: MiRespuesta invoked by cylinder '{cylinderRb.name}'");
@@ -114,13 +101,13 @@ public class SphereRespuesta : MonoBehaviour
 		}
 		else if (CompareTag("Type2"))
 		{
-			// Type2 se mueve hacia el cilindro (el Rigidbody pasado en el evento)
+			// Type2 se mueve hacia el cilindro
 			moveTargetRb = cylinderRb;
 			Debug.Log($"{name}: Soy Type2, me moveré hacia el cilindro '{cylinderRb.name}'");
 		}
 	}
 
-	// Movimiento con física: usar FixedUpdate y ajustar velocity (no tocar transform)
+	// Movimiento con física: usar FixedUpdate y ajustar velocity (IMPORTANTEno tocar transform)
 	private void FixedUpdate()
 	{
 		if (moveTargetRb == null) return;
@@ -134,13 +121,7 @@ public class SphereRespuesta : MonoBehaviour
 			moveTargetRb = null;
 			return;
 		}
-
-		Vector3 desiredVel = dir.normalized * speed;
-
-		// Suavizar un poco la transición:
-		rb.velocity = Vector3.Lerp(rb.velocity, desiredVel, 0.2f);
-		// Si prefieres imponer directamente:
-		// rb.velocity = desiredVel;
+		rb.velocity = dir.normalized * speed;
 	}
 }
 ```
@@ -149,30 +130,18 @@ public class SphereRespuesta : MonoBehaviour
 using System;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
 public class CylinderNotificador : MonoBehaviour
 {
-	// Evento público — pasa el Rigidbody del cilindro a los observadores
 	public event Action<Rigidbody> OnMiEvento;
-
-	// Control sencillo para hacer la prueba: si el cubo colisiona con el cilindro, disparar evento.
 	private void OnCollisionEnter(Collision collision)
 	{
 		Debug.Log($"{name}: OnCollisionEnter with '{collision.collider.name}' (tag='{collision.collider.tag}')");
 		if (collision.collider.CompareTag("Cube"))
 		{
 			Debug.Log($"{name}: Collision with cube detected - invoking OnMiEvento (if any subscribers).\nCollider: {collision.collider.name}, Tag: {collision.collider.tag}");
-			// Dispara el evento, pasando el Rigidbody del propio cilindro
 			Rigidbody rb = GetComponent<Rigidbody>();
 			OnMiEvento?.Invoke(rb);
 		}
-	}
-
-	// (totalmente opcional) método público para disparar el evento desde otros scripts
-	public void DispararEvento() 
-	{
-		Debug.Log($"{name}: DispararEvento() called - invoking OnMiEvento (if any subscribers)");
-		OnMiEvento?.Invoke(GetComponent<Rigidbody>());
 	}
 }
 ```
@@ -180,7 +149,6 @@ public class CylinderNotificador : MonoBehaviour
 ```csharp
 using UnityEngine;
 
-// Mueve el cubo con Rigidbody usando las teclas WASD o flechas
 public class CubeController : MonoBehaviour
 {
 	public float speed = 5f;
@@ -194,7 +162,6 @@ public class CubeController : MonoBehaviour
 		float h = Input.GetAxis("Horizontal");
 		float v = Input.GetAxis("Vertical");
 		Vector3 move = new Vector3(h, 0f, v) * speed;
-		// Preserve current Y velocity (gravity)
 		Vector3 vel = new Vector3(move.x, rb.velocity.y, move.z);
 		rb.velocity = vel;
 	}
@@ -226,10 +193,8 @@ Código
 using System;
 using UnityEngine;
 
-// Notificador global: cualquier humanoide puede avisar cuando es tocado por el cubo.
 public static class HumanoidNotifier
 {
-	// Parámetros: tag del humanoide tocado (ej. "Type1"/"Type2"), Rigidbody del humanoide
 	public static event Action<string, Rigidbody> OnHumanoidTouched;
 
 	public static void NotifyHumanoidTouched(string humanoidTag, Rigidbody humanoidRb)
@@ -243,28 +208,18 @@ public static class HumanoidNotifier
 ```csharp
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
 public class SphereRespuesta : MonoBehaviour
 {
-	[Header("Movimiento (m/s)")]
 	public float speed = 5f;
-
-	[Header("Si eres Type1: asigna aquí la Rigidbody de la Type2 objetivo (en el inspector)")]
-	public Rigidbody targetType2Rb; // asignar solo para Type1 (si no se asigna avisará)
-
-	[Header("Escudos (asigna en inspector)")]
-	public Rigidbody shieldType1; // objeto físico (rigidbody) del escudo del grupo 1
-	public Rigidbody shieldType2; // objeto físico (rigidbody) del escudo del grupo 2
-
-	// Nota: ya no usamos CylinderNotificador. Usamos HumanoidNotifier global.
+	public Rigidbody targetType2Rb;
+	public Rigidbody shieldType1;
+	public Rigidbody shieldType2;
 	private Rigidbody rb;
 	private Rigidbody moveTargetRb; 
 
 	private void Awake()
 	{
 		rb = GetComponent<Rigidbody>();
-
-		// Ensure collider exists and is non-trigger
 		Collider col = GetComponent<Collider>() ?? GetComponentInChildren<Collider>(true);
 		if (col == null)
 		{
@@ -299,8 +254,6 @@ public class SphereRespuesta : MonoBehaviour
 	private void OnGlobalHumanoidTouched(string touchedTag, Rigidbody touchedRb)
 	{
 		Debug.Log($"{name}: OnGlobalHumanoidTouched received - touchedTag={touchedTag}, touchedRb={touchedRb?.name}");
-
-		// Si el cubo tocó un Type2 => los Type1 se mueven hacia shieldType1
 		if (touchedTag == "Type2" && CompareTag("Type1"))
 		{
 			if (shieldType1 != null)
@@ -313,8 +266,6 @@ public class SphereRespuesta : MonoBehaviour
 				Debug.LogWarning($"{name}: Evento: Type2 tocado pero no tengo shieldType1 asignado.");
 			}
 		}
-
-		// Si el cubo tocó un Type1 => los Type2 se mueven hacia shieldType2
 		if (touchedTag == "Type1" && CompareTag("Type2"))
 		{
 			if (shieldType2 != null)
@@ -328,8 +279,6 @@ public class SphereRespuesta : MonoBehaviour
 			}
 		}
 	}
-
-	// Cuando colisione con un escudo físico, cambiar color
 	private void OnCollisionEnter(Collision collision)
 	{
 		if (collision.collider.CompareTag("Cube") || collision.collider.CompareTag("PlayerCube"))
@@ -348,7 +297,7 @@ public class SphereRespuesta : MonoBehaviour
 				if (rend != null)
 				{
 					rend.material = new Material(rend.material);
-					rend.material.color = Color.red; // cambia a rojo cuando colisiona con un escudo
+					rend.material.color = Color.red;
 					Debug.Log($"{name}: Colisioné con un escudo ({otherRb.name}) y cambié de color en renderer '{rend.gameObject.name}'.");
 				}
 				else
@@ -387,9 +336,7 @@ public class SphereRespuesta : MonoBehaviour
 			moveTargetRb = null;
 			return;
 		}
-
-		Vector3 desiredVel = dir.normalized * speed;
-		rb.velocity = Vector3.Lerp(rb.velocity, desiredVel, 0.2f);
+		rb.velocity = dir.normalized * speed;
 	}
 }
 ```
@@ -416,7 +363,6 @@ Código
 ```csharp
 using UnityEngine;
 
-// Mueve el cubo con Rigidbody usando las teclas WASD o flechas
 public class CubeController : MonoBehaviour
 {
 	public float speed = 5f;
@@ -430,7 +376,6 @@ public class CubeController : MonoBehaviour
 		float h = Input.GetAxis("Horizontal");
 		float v = Input.GetAxis("Vertical");
 		Vector3 move = new Vector3(h, 0f, v) * speed;
-		// Preserve current Y velocity (gravity)
 		Vector3 vel = new Vector3(move.x, rb.linearVelocity.y, move.z);
 		rb.linearVelocity = vel;
 	}
@@ -441,10 +386,8 @@ public class CubeController : MonoBehaviour
 using System;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
 public class CylinderNotificador : MonoBehaviour
 {
-	// Evento público — pasa el Rigidbody del cilindro a los observadores
 	public event Action<Rigidbody> OnMiEvento;
 
 	private void Awake()
@@ -507,7 +450,6 @@ Código
 ```csharp
 using UnityEngine;
 
-// Mueve el cubo con Rigidbody usando las teclas WASD o flechas
 public class CubeController : MonoBehaviour
 {
 	public float speed = 5f;
@@ -522,7 +464,6 @@ public class CubeController : MonoBehaviour
 		float h = Input.GetAxis("Horizontal");
 		float v = Input.GetAxis("Vertical");
 		Vector3 move = new Vector3(h, 0f, v) * speed;
-		// Preserve current Y velocity (gravity)
 		Vector3 vel = new Vector3(move.x, rb.linearVelocity.y, move.z);
 		rb.linearVelocity = vel;
 	}
@@ -532,18 +473,15 @@ public class CubeController : MonoBehaviour
 ```csharp
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
 public class HumanoideRespuestaRB : MonoBehaviour
 {
-	public float speed = 5f; // velocidad de giro / movimiento
-	public Transform escudoObjetivo1; // destino Type1
-	public Transform escudoObjetivo2; // destino Type2 (mirar)
-
+	public float speed = 5f; 
+	public Transform escudoObjetivo1;
+	public Transform escudoObjetivo2; 
 	public AreaNotificador notificador;
-
 	private Rigidbody rb;
-	private Vector3 moveTargetPos; // para Type1
-	private Vector3 lookTargetPos; // para Type2
+	private Vector3 moveTargetPos;
+	private Vector3 lookTargetPos; 
 	private bool triggered = false;
 
 	private void Awake()
@@ -627,10 +565,8 @@ public class HumanoideRespuestaRB : MonoBehaviour
 using UnityEngine;
 using System;
 
-[RequireComponent(typeof(Collider))]
 public class AreaNotificador : MonoBehaviour
 {
-	// Evento que avisa que el cubo ha entrado
 	public event Action OnCuboEntrado;
 
 	private void Awake()
@@ -678,44 +614,37 @@ Código
 ```csharp
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
 public class CubeCollector : MonoBehaviour
 {
 	public float speed = 5f;
 	private Rigidbody rb;
-
 	private int score = 0; // puntuación total
-
 	private void Awake()
 	{
 		rb = GetComponent<Rigidbody>();
 		rb.freezeRotation = true;
 	}
-
 	private void FixedUpdate()
 	{
 		float h = Input.GetAxis("Horizontal");
 		float v = Input.GetAxis("Vertical");
-
 		Vector3 move = new Vector3(h, 0f, v) * speed;
 		Vector3 vel = new Vector3(move.x, rb.velocity.y, move.z);
 		rb.velocity = vel;
 	}
-
-	// OnTriggerEnter para recolectar escudos
 	private void OnTriggerEnter(Collider other)
 	{
 		if (other.CompareTag("shieldType"))
 		{
 			score += 5;
 			Debug.Log($"Recolectaste {other.name} (Tipo1) → Puntuación: {score}");
-			Destroy(other.gameObject); // opcional, si quieres que desaparezca
+			Destroy(other.gameObject); // esto s opcional, si quieres que desaparezca
 		}
 		else if (other.CompareTag("shieldType1"))
 		{
 			score += 10;
 			Debug.Log($"Recolectaste {other.name} (Tipo2) → Puntuación: {score}");
-			Destroy(other.gameObject); // opcional
+			Destroy(other.gameObject);
 		}
 	}
 }
@@ -742,51 +671,43 @@ Código
 
 ```csharp
 using UnityEngine;
-using UnityEngine.UI; // necesario para UI Text
-using TMPro; // si usas TextMeshPro, descomenta
+using UnityEngine.UI; // necesario para el UI Text
+// using TMPro;  si en algun momento llegas y  usas TextMeshPro es este
 
-[RequireComponent(typeof(Rigidbody))]
 public class CubeCollector : MonoBehaviour
 {
 	public float speed = 5f;
 	private Rigidbody rb;
-		[Header("UI")]
 	public TMP_Text scoreText;
-
-	private int score = 0; // puntuación total
-
+	private int score = 0;
 	private void Awake()
 	{
 		rb = GetComponent<Rigidbody>();
 		rb.freezeRotation = true;
 		UpdateScoreUI();
 	}
-
 	private void FixedUpdate()
 	{
 		float h = Input.GetAxis("Horizontal");
 		float v = Input.GetAxis("Vertical");
-
 		Vector3 move = new Vector3(h, 0f, v) * speed;
 		Vector3 vel = new Vector3(move.x, rb.velocity.y, move.z);
 		rb.velocity = vel;
 	}
-
-	// OnTriggerEnter para recolectar escudos
 	private void OnTriggerEnter(Collider other)
 	{
 		if (other.CompareTag("shieldType"))
 		{
 			score += 5;
 			Debug.Log($"Recolectaste {other.name} (Tipo1) → Puntuación: {score}");
-			Destroy(other.gameObject); // opcional, si quieres que desaparezca
+			Destroy(other.gameObject);
 			UpdateScoreUI();
 		}
 		else if (other.CompareTag("shieldType1"))
 		{
 			score += 10;
 			Debug.Log($"Recolectaste {other.name} (Tipo2) → Puntuación: {score}");
-			Destroy(other.gameObject); // opcional
+			Destroy(other.gameObject); 
 			UpdateScoreUI();
 		}
 	}
@@ -821,20 +742,15 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using TMPro;
-
-[RequireComponent(typeof(Rigidbody))]
 public class CubeCollector : MonoBehaviour
 {
 	public float speed = 5f;
 	private Rigidbody rb;
+	private int score = 0;
+	public TextMeshProUGUI scoreText;  
+	public TextMeshProUGUI rewardText;  
 
-	private int score = 0; // puntuación total
-
-	[Header("UI")]
-	public TextMeshProUGUI scoreText;   // Text para puntuación
-	public TextMeshProUGUI rewardText;  // Text para mostrar la recompensa
-
-	private int lastRewardScore = 0; // para que no se repita la misma recompensa
+	private int lastRewardScore = 0;
 
 	private void Awake()
 	{
@@ -847,7 +763,6 @@ public class CubeCollector : MonoBehaviour
 	{
 		float h = Input.GetAxis("Horizontal");
 		float v = Input.GetAxis("Vertical");
-
 		Vector3 move = new Vector3(h, 0f, v) * speed;
 		Vector3 vel = new Vector3(move.x, rb.velocity.y, move.z);
 		rb.velocity = vel;
@@ -881,7 +796,6 @@ public class CubeCollector : MonoBehaviour
 
 	private void CheckReward()
 	{
-		// Cada 100 puntos y solo una vez por múltiplo
 		if (score / 100 > lastRewardScore / 100)
 		{
 			lastRewardScore = score;
@@ -894,7 +808,7 @@ public class CubeCollector : MonoBehaviour
 		if (rewardText != null)
 		{
 			rewardText.text = message;
-			// Ocultar después de 2 segundos
+			// Para ocultar después de 2 segundos
 			StartCoroutine(HideRewardAfterDelay(2f));
 		}
 	}
